@@ -20,9 +20,7 @@ module SimpleSchemaSerializers
     def key(serializer_instance)
       return name unless @key_transform
       return @key_transform.call(name) if @key_transform.respond_to?(:call)
-      if serializer_instance.public_methods.include?(@key_transform)
-        return serializer_instance.public_send(@key_transform, name)
-      end
+      return serializer_instance.send(@key_transform, name) if serializer_instance.respond_to?(@key_transform)
 
       name.public_send(@key_transform)
     end
@@ -55,8 +53,8 @@ module SimpleSchemaSerializers
     def value_from(serializer_instance)
       if serializer_instance.object.is_a?(Hash)
         value_from_hash(serializer_instance)
-      elsif serializer_instance.respond_to?(source, false)
-        serializer_instance.public_send(source)
+      elsif serializer_instance.respond_to?(source)
+        serializer_instance.send(source)
       elsif serializer_instance.object.respond_to?(source, false)
         serializer_instance.object.public_send(source)
       else
@@ -69,8 +67,8 @@ module SimpleSchemaSerializers
     end
 
     def value_from_hash(serializer_instance)
-      if serializer_instance.public_methods(false).include?(source)
-        serializer_instance.public_send(source)
+      if local_respond_to?(serializer_instance, source)
+        serializer_instance.send(source)
       elsif serializer_instance.object.key?(source)
         serializer_instance.object[source]
       elsif serializer_instance.object.key?(source.to_s)
@@ -96,10 +94,16 @@ module SimpleSchemaSerializers
       if @conditional.respond_to?(:call)
         serializer_instance.instance_exec(&@conditional)
       elsif serializer_instance.respond_to?(@conditional)
-        serializer_instance.public_send(@conditional)
+        serializer_instance.send(@conditional)
       else
         serializer_instance.object.public_send(@conditional)
       end
+    end
+
+    def local_respond_to?(serializer_instance, source)
+      serializer_instance.public_methods(false).include?(source) ||
+        serializer_instance.protected_methods(false).include?(source) ||
+        serializer_instance.private_methods(false).include?(source)
     end
   end
 end
