@@ -20,9 +20,7 @@ module SimpleSchemaSerializers
     def key(serializer_instance)
       return name unless @key_transform
       return @key_transform.call(name) if @key_transform.respond_to?(:call)
-      if serializer_instance.respond_to?(@key_transform)
-        return serializer_instance.send(@key_transform, name)
-      end
+      return serializer_instance.send(@key_transform, name) if serializer_instance.respond_to?(@key_transform)
 
       name.public_send(@key_transform)
     end
@@ -55,7 +53,7 @@ module SimpleSchemaSerializers
     def value_from(serializer_instance)
       if serializer_instance.object.is_a?(Hash)
         value_from_hash(serializer_instance)
-      elsif serializer_instance.respond_to?(source, false)
+      elsif serializer_instance.respond_to?(source)
         serializer_instance.send(source)
       elsif serializer_instance.object.respond_to?(source, false)
         serializer_instance.object.public_send(source)
