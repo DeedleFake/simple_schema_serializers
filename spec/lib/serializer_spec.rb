@@ -137,6 +137,17 @@ describe SimpleSchemaSerializers::Serializer do
         expect(serializer.serialize({ 'foo' => 'foo1' })).to eq({ 'foo' => 'foo2' })
       end
 
+      it 'should allow calling private methods from conditions' do
+        serializer = create_serializer do
+          attribute :test, :string
+          private
+          def test
+            'test'
+          end
+        end
+        expect(serializer.serialize({ 'test' => 'bad' })).to eq({ 'test' => 'test' })
+      end
+
       it 'should not error if a built-in method name is used as a hash key' do
         serializer = create_serializer do
           attribute :method, :string
