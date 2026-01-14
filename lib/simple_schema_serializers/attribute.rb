@@ -67,7 +67,7 @@ module SimpleSchemaSerializers
     end
 
     def value_from_hash(serializer_instance)
-      if serializer_instance.respond_to?(source)
+      if local_respond_to?(serializer_instance, source)
         serializer_instance.send(source)
       elsif serializer_instance.object.key?(source)
         serializer_instance.object[source]
@@ -98,6 +98,12 @@ module SimpleSchemaSerializers
       else
         serializer_instance.object.public_send(@conditional)
       end
+    end
+
+    def local_respond_to?(serializer_instance, source)
+      serializer_instance.public_methods(false).include?(source) ||
+        serializer_instance.protected_methods(false).include?(source) ||
+        serializer_instance.private_methods(false).include?(source)
     end
   end
 end
